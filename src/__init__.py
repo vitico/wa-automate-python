@@ -17,8 +17,6 @@ from json import dumps, loads
 
 import requests
 from PIL import Image
-from axolotl.kdf.hkdfv3 import HKDFv3
-from axolotl.util.byteutil import ByteUtil
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from selenium import webdriver
@@ -769,23 +767,9 @@ class WhatsAPIDriver(object):
                 pass
 
         file_data = b64decode(self.wapi_functions.downloadFile(media_msg.client_url))
+        raise Exception('Impossible to download file')
 
-        if not file_data:
-            raise Exception('Impossible to download file')
-
-        media_key = b64decode(media_msg.media_key)
-        derivative = HKDFv3().deriveSecrets(media_key,
-                                            binascii.unhexlify(media_msg.crypt_keys[media_msg.type]),
-                                            112)
-
-        parts = ByteUtil.split(derivative, 16, 32)
-        iv = parts[0]
-        cipher_key = parts[1]
-        e_file = file_data[:-10]
-
-        cr_obj = Cipher(algorithms.AES(cipher_key), modes.CBC(iv), backend=default_backend())
-        decryptor = cr_obj.decryptor()
-        return BytesIO(decryptor.update(e_file) + decryptor.finalize())
+        
 
     #################
     # Groups
